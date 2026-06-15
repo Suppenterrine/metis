@@ -1,9 +1,9 @@
 {
 	"required": true,
-	"package": "fr.sukikui.playercoordsapi.mixin.client",
+	"package": "dev.suppenterrine.metis.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"PlayerCoordsAPIClientMixin"
+		"MetisClientMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

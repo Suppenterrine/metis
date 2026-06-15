@@ -1,49 +1,40 @@
 {
 	"schemaVersion": 1,
-	"id": "playercoordsapi",
+	"id": "metis",
 	"version": "${version}",
-	"name": "PlayerCoordsAPI",
-	"description": "A lightweight Fabric mod that exposes your Minecraft player coordinates via a local HTTP API",
+	"name": "Metis",
+	"description": "Client-side perception sensor for the MCDS ecosystem — exposes the player's live coordinates and world context via a local HTTP API. Builds on PlayerCoordsAPI by Sukikui (MIT).",
 	"authors": [
-		"Sukikui"
+		"Suppenterrine",
+		"Sukikui (original PlayerCoordsAPI)"
 	],
 	"contact": {
-		"homepage": "https://github.com/Sukikui/PlayerCoordsAPI",
-		"sources": "https://github.com/Sukikui/PlayerCoordsAPI.git",
-		"issues": "https://github.com/Sukikui/PlayerCoordsAPI/issues"
+		"homepage": "https://github.com/Suppenterrine/metis",
+		"sources": "https://github.com/Suppenterrine/metis.git",
+		"issues": "https://github.com/Suppenterrine/metis/issues"
 	},
 	"license": "MIT",
-	"icon": "assets/playercoordsapi/icon.png",
+	"icon": "assets/metis/icon.png",
 	"environment": "client",
 	"entrypoints": {
 		"main": [
-			"fr.sukikui.playercoordsapi.PlayerCoordsAPI"
+			"dev.suppenterrine.metis.Metis"
 		],
 		"client": [
-			"fr.sukikui.playercoordsapi.PlayerCoordsAPIClient"
-		],
-		"modmenu": [
-			"fr.sukikui.playercoordsapi.config.ModMenuIntegration"
+			"dev.suppenterrine.metis.MetisClient"
 		]
 	},
 	"mixins": [
-		"playercoordsapi.mixins.json",
+		"metis.mixins.json",
 		{
-			"config": "playercoordsapi.client.mixins.json",
+			"config": "metis.client.mixins.json",
 			"environment": "client"
 		}
 	],
 	"depends": {
 		"fabricloader": ">=0.16.14",
-		"minecraft": "~1.21.8",
+		"minecraft": "~1.21.1",
 		"java": ">=21",
-		"fabric-api": "*",
-		"cloth-config": ">=13.0.0"
-	},
-	"recommends": {
-		"modmenu": ">=9.0.0"
-	},
-	"suggests": {
-		"another-mod": "*"
+		"fabric-api": "*"
 	}
 }
