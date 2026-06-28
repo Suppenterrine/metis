@@ -56,11 +56,27 @@ The default port is `25566` so it never clashes with a local Minecraft server on
 
 ## 🔌 API Usage
 
-| Endpoint      | Method           | Description                                              |
-|---------------|------------------|----------------------------------------------------------|
-| `/api/coords` | `GET`, `OPTIONS` | Returns the player's current coordinates and world infos |
+All endpoints are `GET` (with `OPTIONS` for CORS preflight), read-only, and
+loopback-only. Each perception endpoint carries a `perception` field naming its
+class from the [Law of Embodied Perception](docs/PERCEPTION_RULES.md) — so a
+consumer (MCDS) knows what gating, if any, the rule requires. Metis itself
+applies no gating; it exposes raw, tagged data.
 
-### Response Fields
+| Endpoint           | Class       | Description                                                        |
+|--------------------|-------------|--------------------------------------------------------------------|
+| `/api/coords`      | —           | Position, view direction, world/biome, identity (legacy contract)  |
+| `/api/movement`    | `DISTANT`   | Pose & locomotion state, velocity, vehicle — visible at range      |
+| `/api/look`        | `PROXIMATE` | Crosshair target (looked-at block or entity)                       |
+| `/api/equipment`   | `PROXIMATE` | Held items, selected slot, visibly worn armor                      |
+| `/api/environment` | `AMBIENT`   | The sensing body's own time, sky, weather and light                |
+| `/api/players`     | `BROADCAST` | Tab-list common knowledge (online players, ping, game mode)        |
+
+> **Never exposed.** Private internal state — health, hunger, breath, experience,
+> status effects, the hidden inventory — has no endpoint by design. A co-located
+> human couldn't read it, so neither can an agent. See
+> [`docs/PERCEPTION_RULES.md`](docs/PERCEPTION_RULES.md).
+
+### `/api/coords` Response Fields
 
 | Field      | Type     | Description                   |
 |------------|----------|-------------------------------|
@@ -94,6 +110,110 @@ The default port is `25566` so it never clashes with a local Minecraft server on
   "biome": "minecraft:plains",
   "uuid": "550e8400-e29b-41d4-a716-446655440000",
   "username": "PlayerName"
+}
+```
+
+### `/api/movement` — `DISTANT`
+
+How the player is moving — readable from a silhouette at range.
+
+```json
+{
+  "perception": "DISTANT",
+  "pose": "STANDING",
+  "onGround": true,
+  "sprinting": false,
+  "sneaking": false,
+  "swimming": false,
+  "crawling": false,
+  "climbing": false,
+  "gliding": false,
+  "onFire": false,
+  "inWater": false,
+  "submerged": false,
+  "inLava": false,
+  "velocity": { "x": 0.0, "y": -0.0784, "z": 0.0 },
+  "horizontalSpeed": 0.0,
+  "vehicle": null
+}
+```
+
+`pose` is the raw `EntityPose` name (`STANDING`, `CROUCHING`, `SWIMMING`,
+`FALL_FLYING`, …). `vehicle` is the ridden entity's registry id, or `null`.
+
+### `/api/look` — `PROXIMATE`
+
+What the player is aiming at. Fine detail — only faithful up close and in line of
+sight, so MCDS gates it on distance and sightline.
+
+```json
+{
+  "perception": "PROXIMATE",
+  "type": "BLOCK",
+  "block": { "x": 12, "y": 63, "z": -40, "face": "UP", "id": "minecraft:stone", "distance": 3.41 },
+  "entity": null
+}
+```
+
+`type` is `BLOCK`, `ENTITY`, `MISS`, or `NONE`. For an entity target, `entity`
+carries `{ id, uuid, name, distance }` and `block` is `null`.
+
+### `/api/equipment` — `PROXIMATE`
+
+Held and visibly worn gear. Item objects are `null` when the slot is empty;
+`damage`/`maxDamage` are `null` for non-damageable items.
+
+```json
+{
+  "perception": "PROXIMATE",
+  "selectedSlot": 0,
+  "mainHand": { "id": "minecraft:diamond_pickaxe", "count": 1, "name": "Pickaxe", "damage": 12, "maxDamage": 1561 },
+  "offHand": { "id": "minecraft:torch", "count": 32, "name": "Torch", "damage": null, "maxDamage": null },
+  "armor": {
+    "head": null,
+    "chest": { "id": "minecraft:iron_chestplate", "count": 1, "name": "Iron Chestplate", "damage": 0, "maxDamage": 240 },
+    "legs": null,
+    "feet": null
+  }
+}
+```
+
+### `/api/environment` — `AMBIENT`
+
+The sensing body's *own* surroundings — read at its own position, never relayed
+from another body.
+
+```json
+{
+  "perception": "AMBIENT",
+  "world": "minecraft:overworld",
+  "biome": "minecraft:plains",
+  "timeOfDay": 13000,
+  "dayTime": 145000,
+  "isDay": false,
+  "isNight": true,
+  "moonPhase": 4,
+  "raining": false,
+  "thundering": false,
+  "rainGradient": 0.0,
+  "thunderGradient": 0.0,
+  "light": { "block": 0, "sky": 4, "effective": 4 }
+}
+```
+
+### `/api/players` — `BROADCAST`
+
+Tab-list common knowledge — what the game already shows every player. `server` is
+the connected server address, or `null` in singleplayer.
+
+```json
+{
+  "perception": "BROADCAST",
+  "singleplayer": false,
+  "server": "play.example.net",
+  "players": [
+    { "uuid": "550e8400-e29b-41d4-a716-446655440000", "name": "PlayerName", "latency": 42, "gameMode": "survival" }
+  ]
 }
 ```
 
