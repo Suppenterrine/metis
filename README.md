@@ -13,9 +13,15 @@ A lightweight, client-side Fabric mod that exposes the player's live coordinates
 
 Metis runs a tiny HTTP server inside *your own* Minecraft client and serves your current position, view direction, and world/biome at a single localhost endpoint. External tools can read where you are without scraping the screen or the game's memory.
 
-In the MCDS satellite family it is the **organ of perception**: where `blackbox` preserves memory, `thread` opens up knowledge, and `coda` carries information back out as sound, **Metis is what sees**. The player-distance use case (feeding bot↔player distance into MCDS radio comms) was just the first reason to build it — the mod is the sensory link to the live world, and is meant to grow (held item, health, targeted block, nearby entities, …).
+In the MCDS satellite family it is the **organ of perception**: where `blackbox` preserves memory, `thread` opens up knowledge, and `coda` carries information back out as sound, **Metis is what sees**. The player-distance use case (feeding bot↔player distance into MCDS radio comms) was just the first reason to build it — the mod is the sensory link to the live world, and is meant to grow (movement & pose, held item, targeted block, nearby entities, …) **within the limits of embodied perception**.
 
 > The name: *Metis* is the Greek Titaness of cunning, perception, and situational intelligence — not raw power, but the ability to grasp reality and orient within it. The sailor's feel for the storm, the hunter's eye for a trail.
+
+> **What Metis is allowed to sense is governed by one rule:** an agent must never know
+> anything about a player that a second, co-located human couldn't also perceive or infer.
+> Private state (health, hunger, …) is never exposed; everything else is exposed *raw and
+> tagged with a perception class*, and the gating (distance, line of sight) happens in MCDS.
+> See **[`docs/PERCEPTION_RULES.md`](docs/PERCEPTION_RULES.md)** — the Law of Embodied Perception.
 
 ## ✨ Features
 
