@@ -46,10 +46,16 @@ There is no endpoint to gate.
 ### 1.2 Why this matters
 
 The MCDS bots are meant to feel like **embodied peers** — actors who share the
-world with the player under the same perceptual limits a teammate would have.
-The moment a bot knows the player's exact HP, or reads their look-direction from
-across the map through a wall, the illusion collapses: it stops being a
-companion and becomes a wallhack. Immersion is the product. Protect it.
+world with the player under roughly the same perceptual limits a teammate would
+have. A bot that reads the player's exact HP, or their look-direction from across
+the map through a wall, stops feeling like a companion. That's the immersion the
+Cardinal Rule protects.
+
+This is a *guideline for what data is honest to expose*, not a vow of maximal
+realism. Metis and MCDS are also a **tool**, and the tool has to stay usable —
+where immersion and usability pull against each other, that balance is MCDS's to
+strike, case by case. The rule below is the floor, not a mandate to make
+everything maximally immersive.
 
 ---
 
@@ -75,15 +81,28 @@ facts *and* the perception class, and MCDS — which owns the bot's body, positi
 and intent — does the gating. Zack, zack, zack: here is the data, here is its
 class, done.
 
+**MCDS owns how the data is used — including consuming it raw.** The perception
+classes below are *guidance* about what each datum honestly represents, not
+restrictions Metis imposes on MCDS. Some data is meant to be consumed raw and
+ungated, and that is correct: e.g. the player's exact position feeds the
+radio/walkie-talkie audio model in `coda`, where real player↔bot distance
+determines signal strength. That is a legitimate, intended raw use — it doesn't
+hand the bot a perceptual super-power, it drives a simulation. Likewise "come
+here," typed coordinates, and saved locations are normal, wanted tool behaviour.
+Metis draws exactly one line — expose or don't. What happens after is MCDS's
+call.
+
 ---
 
 ## 3. The Perception Classes
 
 Every datum Metis can expose falls into exactly one of five classes. The class
-is part of the contract: it tells a consumer *what gate the Cardinal Rule
-requires* before that datum may inform a bot's behaviour.
+is guidance for the consumer: it describes *what kind of perception the datum
+honestly represents*, so MCDS can decide what gating (if any) is faithful before
+that datum informs a bot's behaviour.
 
-Metis **tags** each field/endpoint with its class. MCDS **acts** on the tag.
+Metis **tags** each field/endpoint with its class. MCDS **decides** what to do
+with the tag — gate it, degrade it, or consume it raw where that's the right call.
 
 ### `PRIVATE` — internal state, perceivable by no one
 Health, absorption, hunger, saturation, breath/air, exact experience, active
@@ -125,9 +144,9 @@ with an elytra / riding a vehicle, their gross heading and motion, that they are
 on fire or in water. Their rough whereabouts when in view.
 
 - **Metis action:** ✅ Exposed raw.
-- **Gate (MCDS):** subject must plausibly be **in view**. Coarse data, so the
-  gate is lenient, but it is still a gate — you cannot read a silhouette through
-  terrain or out of render range.
+- **Suggested gate (MCDS's call):** subject plausibly **in view**. Coarse data,
+  so a lenient gate fits — reading a silhouette through terrain or out of render
+  range is the thing to avoid.
 - **Why it's great:** this is the tactical goldmine. A bot that sees *how* the
   player is moving can adapt its own navigation automatically — match a sprint,
   follow onto a boat, hang back when they sneak. Pure embodied tactics.
@@ -139,11 +158,11 @@ the subject is looking at (crosshair target), the block they are standing on,
 fine head/look direction.
 
 - **Metis action:** ✅ Exposed raw — **no gating, no logic, Metis just sends it.**
-- **Gate (MCDS):** **distance + line-of-sight, with accuracy that degrades as
-  distance grows.** Up close and in sight: full fidelity — the bot may
-  anticipate, pre-walk toward where the player is aiming, react to the held
-  tool. Far away or without sightline: the data must blur toward nothing. The
-  gate logic is **built in MCDS, not here.**
+- **Suggested gate (MCDS's call):** distance + line-of-sight, with accuracy that
+  falls off as distance grows. Up close and in sight: full fidelity — the bot may
+  anticipate, pre-walk toward where the player is aiming, react to the held tool.
+  Far away or without sightline: the detail should fade out. The gate logic, if
+  any, is **built in MCDS, not here.**
 - **Rationale:** you *can* see what a teammate is wielding or pointing at — but
   only when you are near enough and actually looking. At a hundred blocks you
   cannot.
@@ -153,11 +172,11 @@ fine head/look direction.
 ## 4. Classification of Known Data Points
 
 This is the working register. Each row is a concrete client-observable datum,
-its perception class, whether Metis exposes it, and the gate the Cardinal Rule
-requires of MCDS. Extend this table as new senses are proposed; the class
-decides everything downstream.
+its perception class, whether Metis exposes it, and the gate that would be
+*faithful* for MCDS to apply (guidance, not a Metis mandate). Extend this table
+as new senses are proposed; the class is the orientation, MCDS makes the call.
 
-| Datum | Class | Metis exposes | Gate MCDS must apply |
+| Datum | Class | Metis exposes | Suggested perception gate (MCDS's call) |
 |---|---|---|---|
 | Health / absorption | `PRIVATE` | ❌ | — (never surfaced) |
 | Hunger / saturation / exhaustion | `PRIVATE` | ❌ | — |
@@ -177,7 +196,7 @@ decides everything downstream.
 | Movement & pose state (sprint/sneak/swim/climb/elytra/vehicle) | `DISTANT` | ✅ | in-view |
 | Gross velocity / heading | `DISTANT` | ✅ | in-view |
 | On-fire / in-water / visibly burning | `DISTANT` | ✅ | in-view |
-| Position (x/y/z) | `DISTANT` ⚠️ | ✅ | in-view — **see §6, the hard case** |
+| Position (x/y/z) | `DISTANT` | ✅ | MCDS's call — legitimately consumed **raw** for some uses (e.g. radio signal-strength distance in `coda`); how it informs bot *navigation/knowledge* is MCDS policy |
 | Held item (main / off hand) | `PROXIMATE` | ✅ | distance + line-of-sight, degrade with range |
 | Worn / visible equipment (armor) | `PROXIMATE` | ✅ | distance + line-of-sight, degrade with range |
 | Crosshair target (looked-at block/entity) | `PROXIMATE` | ✅ | distance + line-of-sight, **degrade with range** |
@@ -190,10 +209,10 @@ decides everything downstream.
 
 ## 5. The Line-of-Sight Gate (lives in MCDS)
 
-Several classes (`DISTANT`, `PROXIMATE`) require knowing whether the bot can
-actually *see* the subject. The user's instinct is exactly right: a small
-function where the bot tests whether it has a clear sightline to the player, and
-the proximate/distant senses only "switch on" when it does.
+Some `DISTANT`/`PROXIMATE` data is most faithful when the bot can actually *see*
+the subject. A natural pattern: a small function where the bot tests whether it
+has a clear sightline to the player, and the proximate/distant senses sharpen as
+that holds.
 
 **That function lives in MCDS, not Metis.** But note the clean handoff:
 
@@ -208,42 +227,22 @@ does not know where the bot is. It only knows what its own body perceives.
 
 ---
 
-## 6. The Hard Case: Position
-
-Position is the field where embodiment is most fragile, and it deserves a flag.
-
-A human *can* see another player at range and know roughly where they are — that
-is genuine `DISTANT` perception. But **exact floating-point coordinates** are
-more than a person reads off a distant silhouette; that is map-tool precision,
-not eyesight.
-
-The Cardinal Rule does not forbid exposing position — Metis stays dumb and
-exposes it raw — but it puts the burden squarely on MCDS:
-
-- in-view, nearby → precise position is fair (you can see them clearly);
-- in-view, far → position should be **coarse** (a direction and rough range,
-  not a survey-grade fix);
-- out of view → no positional knowledge at all.
-
-Treat position as `DISTANT` data that **MCDS must degrade with distance** the
-same way it degrades `PROXIMATE` detail. This is the single most immersion-
-critical gate in the whole system.
-
----
-
-## 7. How a Consuming Agent Should Use This
+## 6. How a Consuming Agent Should Use This
 
 1. Read the datum **and its perception class** from the Metis API.
-2. Look up the gate the class requires (this document).
-3. Apply the gate using your *own* body's situation (position, sightline).
-4. If the gate is not satisfied, **the bot does not get to know it.** Do not
-   work around it. The immersion contract is the whole point.
+2. Look up the suggested gate for that class (this document).
+3. Decide what's faithful for your use, using your *own* body's situation
+   (position, sightline) — gate it, degrade it, or consume it raw where that's
+   the legitimate, intended use.
+4. Keep the balance: the Cardinal Rule is the floor for *what is honest to know*;
+   beyond that, usability matters too. Don't cripple the tool in the name of
+   maximal realism, and don't hand a bot a perceptual super-power it shouldn't have.
 
 `PRIVATE` data never arrives, so there is nothing to handle — that is by design.
 
 ---
 
-## 8. Decision Procedure for New Senses
+## 7. Decision Procedure for New Senses
 
 Before adding any new datum to Metis, walk this:
 
@@ -262,7 +261,7 @@ it honest, and document why in §4.
 
 ---
 
-## 9. Invariants (never violate)
+## 8. Invariants (never violate)
 
 - Metis contains **no gating logic**. (Only omission of `PRIVATE`.)
 - Metis never relays one body's `AMBIENT` as another body's.
