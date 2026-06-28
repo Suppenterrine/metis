@@ -6,6 +6,10 @@ This document is normative. It is meant to be read by humans *and* by AI agents.
 Any agent building on, extending, or consuming Metis should be able to orient on
 it and decide, on its own, whether a given piece of data is legitimate to surface.
 
+> For the **as-built** technical reference — what each endpoint actually returns
+> and how to call it — see [`Reference/`](Reference/). This document is the law;
+> that is the implementation living under it.
+
 ---
 
 ## 0. Essence

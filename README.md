@@ -62,6 +62,11 @@ class from the [Law of Embodied Perception](docs/PERCEPTION_RULES.md) — so a
 consumer (MCDS) knows what gating, if any, the rule requires. Metis itself
 applies no gating; it exposes raw, tagged data.
 
+> 📚 **Full per-endpoint reference:** [`docs/Reference/`](docs/Reference/) — one
+> page per endpoint (why it exists, fields, examples, the exact Minecraft API it
+> reads), plus architecture, configuration and conventions. The tables below are
+> the quick version.
+
 | Endpoint           | Class       | Description                                                        |
 |--------------------|-------------|--------------------------------------------------------------------|
 | `/api/coords`      | —           | Position, view direction, world/biome, identity (legacy contract)  |
